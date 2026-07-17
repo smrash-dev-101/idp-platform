@@ -1,0 +1,18 @@
+yaml
+ name: CI
+
+ on:
+   pull_request:
+      branches: [main]
+   push:
+      branches: [main]
+
+ jobs:
+   hello-world:
+     runs-on: ubuntu-latest
+     steps:
+       - name: Checkout code
+         uses: actions/checkout@v4
+
+       - name: Confirm CI is wired up
+         run: echo "CI pipeline is running successfully"   
