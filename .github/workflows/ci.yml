@@ -1,18 +1,32 @@
 
+ 
  name: CI
-
- on:
-   pull_request:
-      branches: [main]
-   push:
-      branches: [main]
+ 
+ on: 
+  pull_request: 
+     branches: [main]
+  push:
+     branches: [main]
 
  jobs:
-   hello-world:
-     runs-on: ubuntu-latest
-     steps:
-       - name: Checkout code
-         uses: actions/checkout@v4
+    validate-configs:
+       runs-on: ubuntu-latest
+       steps:
+        - name: Checkout code
+          uses: actions/checkout@v4
 
-       - name: Confirm CI is wired up
-         run: echo "CI pipeline is running successfully"   
+        -  name: Set up Python
+           uses: actions/setup-python@v5
+           with:
+             python-version: "3.12"
+
+        - name: Install validation tool
+          run: pip install check-jsonschema
+        
+        - name: Validate all environment configs
+          run: |
+            for file in configs/examples/*.yaml; do
+             echo "Validating $file"
+             check-jsonschema --schemafile schemas/environment-request.schema.json "$file"
+            done      
+
