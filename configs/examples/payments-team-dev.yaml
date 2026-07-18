@@ -1,0 +1,15 @@
+
+
+  team: payments-teams
+  environment: dev
+  owner: jane.doe@example.com
+  cost_cap_usd: 50
+  
+  resource:
+    type: ec2
+    size: small
+    region: us-east-1
+
+  tags:
+    cost-center: payments
+    project: checkout-service

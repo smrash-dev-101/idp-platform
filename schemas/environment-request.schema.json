@@ -1,0 +1,54 @@
+
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Environment Request",
+  "type": "object",
+  "required": ["team", "environment", "owner", "cost_cap_usd", "resource", "tags"],
+  "properties":{
+	"team":{
+	  "type": "string", 
+	  "pattern": "^[a-z0-9-]+$"
+        },
+          "environment": {
+		  "type": "string",
+		  "enum": ["dev", "staging", "prod"]
+        },
+          "owner":{
+	        "type": "string",
+                "format": "email"	
+	},
+          "cost_cap_usd": {
+	        "type": "number" ,
+                "minimum": 1,
+                "maximum": 5000
+        },
+          "resource":{
+	      "type": "object",
+              "required": ["type", "size", "region"],
+              "properties": {
+	         "type": {
+	            "type": "string",
+                    "enum": ["ec2"]
+             },
+              "size": {
+                 "type": "string",
+                 "enum": ["small", "medium", "large"]
+             },
+              "region":{
+	         "type": "string",
+		 "pattern": "^[a-z]{2}-[a-z]+-[0-9]$"
+	      }
+	    }
+	  },
+	  "tags": {
+	     "type": "object",
+	     "required":["cost-center", "project"],
+	     "additionalProperties": {
+		     "type": "string"
+		}
+	      }
+           }
+	  } 
+        		 
+
+
