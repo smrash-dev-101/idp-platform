@@ -68,4 +68,10 @@ resource "aws_instance" "idp_example" {
     environment = "dev"
     cost-center = "payments"
   }
+  lifecycle {
+    postcondition {
+      condition     = contains(keys(self.tags), "team") && contains(keys(self.tags), "environment") && contains(keys(self.tags), "cost-center")
+      error_message = "Instance must be tagged with 'team' , 'environemnt', and 'cost-center'."
+    }
+  }
 }
