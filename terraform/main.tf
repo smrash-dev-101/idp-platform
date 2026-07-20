@@ -75,3 +75,32 @@ resource "aws_instance" "idp_example" {
     }
   }
 }
+
+resource "aws_budgets_budget" "idp_cost_cap" {
+  name  = "idp-platform-dev-cost-cap"
+  budget_type = "COST"
+  limit_amount = "50"
+  limit_unit   = "USD"
+  time_unit   = "MONTHLY"
+
+  cost_filter {
+    name = "TagKeyValue"
+    values = ["user:team$payments-team"]
+   }
+  notification { 
+    comparison_operator = "GREATER_THAN"
+    threshold           = 80
+    threshold_type      = "PERCENTAGE"
+    notification_type   = "ACTUAL"
+    subscriber_sns_topic_arns = ["arn:aws:sns:us-east-1:898322960383:billing-alarm-topic"]
+    }
+
+  notification {
+    comparison_operator  = "GREATER_THAN"
+    threshold            = 100
+    threshold_type       = "PERCENTAGE"
+    notification_type    = "ACTUAL"
+    subscriber_sns_topic_arns = ["arn:aws:sns:us-east-1:898322960383:billing-alarm-topic"]
+
+    }
+}
