@@ -58,7 +58,7 @@
           run: terraform init
 
        -  name: Terraform Plan
-          run: terraform plan
+          run: terraform plan -var="ssh_public_key=${{ secrets.SSH_PUBLIC_KEY }}"
  
        -  name: Terraform Apply
           run:  terraform apply -auto-approve
