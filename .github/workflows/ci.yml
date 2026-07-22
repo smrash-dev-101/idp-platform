@@ -1,65 +1,82 @@
+name: CI
 
- 
- name: CI
- 
- on: 
-  pull_request: 
-     branches: [main]
+on:
+  pull_request:
+    branches: [main]
   push:
-     branches: [main]
+    branches: [main]
 
- jobs:
-    validate-configs:
-       runs-on: ubuntu-latest
-       steps:
-        - name: Checkout code
-          uses: actions/checkout@v4
+jobs:
+  validate-configs:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
 
-        -  name: Set up Python
-           uses: actions/setup-python@v5
-           with:
-             python-version: "3.12"
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
 
-        - name: Install validation tool
-          run: pip install check-jsonschema
-        
-        - name: Validate all environment configs
-          run: |
-            for file in configs/examples/*.yaml; do
-             echo "Validating $file"
-             check-jsonschema --schemafile schemas/environment-request.schema.json "$file"
-            done      
- 
-    terraform-apply-prod:
-      needs: validate-configs
-      runs-on: ubuntu-latest
-      environment: production
-      if: github.ref == 'refs/heads/main'
-      defaults:
-         run:
-            working-directory: terraform
-      steps:
-       -  name: Checkout code
-          uses: actions/checkout@v4
-      
-       -  name: Configure AWS credentials
-          uses: aws-actions/configure-aws-credentials@v4
-          with:
-             aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-             aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-             aws-region: us-east-1
+      - name: Install validation tool
+        run: pip install check-jsonschema
 
-       -  name: Setup Teraaform
-          uses: hashicorp/setup-terraform@v3
-          with:
-            terraform_version: 1.15.8
+      - name: Validate all environment configs
+        run: |
+          for file in configs/examples/*.yaml; do
+            echo "Validating $file"
+            check-jsonschema --schemafile schemas/environment-request.schema.json "$file"
+          done
 
-       -  name: Terraform Init
-          run: terraform init
+  terraform-apply-prod:
+    needs: validate-configs
+    runs-on: ubuntu-latest
+    environment: production
+    if: github.ref == 'refs/heads/main'
+    defaults:
+      run:
+        working-directory: terraform
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
 
-       -  name: Terraform Plan
-          run: terraform plan -var="ssh_public_key=${{ secrets.SSH_PUBLIC_KEY }}"
- 
-       -  name: Terraform Apply
-          run: terraform apply -auto-approve -var="ssh_public_key=${{ secrets.SSH_PUBLIC_KEY }}"
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-east-1
 
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: 1.15.8
+
+      - name: Terraform Init
+        run: terraform init
+
+      - name: Terraform Plan
+        run: terraform plan -var="ssh_public_key=${{ secrets.SSH_PUBLIC_KEY }}"
+
+      - name: Terraform Apply
+        run: terraform apply -auto-approve -var="ssh_public_key=${{ secrets.SSH_PUBLIC_KEY }}"
+
+      - name: Capture Terraform outputs
+        id: tf_outputs
+        run: |
+          echo "public_ip=$(terraform output -raw instance_public_ip)" >> "$GITHUB_OUTPUT"
+          echo "public_dns=$(terraform output -raw instance_public_dns)" >> "$GITHUB_OUTPUT"
+
+      - name: Post provisioning result as commit comment
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const ip = "${{ steps.tf_outputs.outputs.public_ip }}";
+            const dns = "${{ steps.tf_outputs.outputs.public_dns }}";
+            const body = "**Environment provisioned successfully**\n\n- Public IP: " + ip + "\n- Public DNS: " + dns + "\n- SSH: ssh -i ~/.ssh/idp-platform-key ubuntu@" + ip;
+            github.rest.repos.createCommitComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              commit_sha: context.sha,
+              body: body
+            });
