@@ -59,3 +59,13 @@ This log tracks real problems hit during development, how they were diagnosed, a
 **Fix / lesson:** Switched to two more reliable habits: (1) writing files via heredoc (`cat > file << 'EOF'`) for guaranteed exact content with no editor-introduced drift, and (2) always verifying with the actual parser (`python3 -c "import yaml; yaml.safe_load(...)"` or `terraform validate`) instead of eyeballing pasted text, which can render inconsistently anyway.
 
 **Interview angle:** Demonstrates a real engineering habit — trust the tool's validation, not visual inspection, especially for whitespace-sensitive formats.
+
+## 6. GitHub Actions 403 error despite correct workflow-level permissions
+
+**What happened:** A CI step using `actions/github-script` to post a commit comment failed with `403: Resource not accessible by integration`, even after adding an explicit `permissions: contents: write` block to the job in the workflow YAML.
+
+**Root cause:** GitHub Actions has two layers of permission control — the workflow file's `permissions:` block, and a repository-wide default under Settings > Actions > General > "Workflow permissions." The repo was set to "Read repository contents permission" (read-only) by default, which acted as a hard ceiling, overriding the more permissive setting requested in the workflow YAML itself.
+
+**Fix:** Changed the repository-wide setting to "Read and write permissions" under Settings > Actions > General.
+
+**Interview angle:** A good example of permissions systems having multiple layers that aren't visible from the code alone. Debugging required reading the actual API response headers (`x-accepted-github-permissions`) rather than just assuming the YAML fix would work, and recognizing that a 403 with seemingly-correct code often points to an external policy, not a syntax issue.
