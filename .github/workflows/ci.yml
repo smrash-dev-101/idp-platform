@@ -29,6 +29,8 @@ jobs:
           done
 
   terraform-apply-prod:
+    permissions:
+      contents: write
     needs: validate-configs
     runs-on: ubuntu-latest
     environment: production
