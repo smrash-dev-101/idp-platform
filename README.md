@@ -60,8 +60,7 @@ This repo is a working reference implementation rather than a install-and-run to
 5. Submit a config under `configs/` matching the schema in `schemas/environment-request.schema.json`
 
 ## Project board
-
-Ticket-by-ticket build progress is tracked on the GitHub Projects board for this repo.
+Ticket-by-ticket build progress, from initial AWS/IAM setup through CI, Terraform, guardrails, incident response, and documentation, is tracked on the [GitHub Projects board](https://github.com/users/smrash-dev-101/projects/1) for this repo.
 
 ## License
 
